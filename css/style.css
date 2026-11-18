@@ -1,0 +1,331 @@
+/* ==========================================================================
+   Course de canards — styles
+   Mobile-first, prise en compte des encoches (safe areas) et des préférences
+   d'accessibilité (mouvement réduit).
+   ========================================================================== */
+
+:root {
+  --ink: #0b3d55;
+  --accent: #ff7a00;
+  --sun: #ffd23f;
+  --soft: #eef8fb;
+  --panel: rgba(255, 255, 255, 0.97);
+  --radius: 22px;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-x: env(safe-area-inset-left, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #2bb6db;
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation; /* désactive le zoom au double tap */
+  overscroll-behavior: none;
+}
+
+#track {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- Écrans superposés ---------- */
+
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-t) + 16px) calc(var(--safe-x) + 16px) calc(var(--safe-b) + 16px);
+  background: rgba(6, 50, 74, 0.35);
+}
+
+.panel {
+  width: min(100%, 420px);
+  max-height: 100%;
+  overflow: auto;
+  padding: 24px 20px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: 0 20px 50px rgba(0, 30, 50, 0.35);
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  line-height: 1.1;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 1.6rem;
+}
+
+.lead {
+  margin: 0 0 18px;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+/* ---------- Choix du canard ---------- */
+
+.choices {
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+}
+
+.choices legend {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.duck-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+.duck-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 10px 6px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.duck-card svg {
+  width: 64px;
+  height: 52px;
+}
+
+.duck-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: #fff4e8;
+  transform: translateY(-2px);
+}
+
+/* ---------- Boutons ---------- */
+
+.btn {
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(255, 122, 0, 0.35);
+}
+
+#btn-start {
+  width: 100%;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible,
+.duck-card:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.stats {
+  margin: 16px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Podium ---------- */
+
+.podium {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.podium-row {
+  display: grid;
+  grid-template-columns: 44px 14px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--soft);
+  font-weight: 600;
+  text-align: left;
+}
+
+.podium-row.is-player {
+  background: #fff4e8;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.podium-row .rank {
+  font-weight: 800;
+}
+
+.podium-row .dot {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+}
+
+.podium-row .time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- HUD (pendant la course) ---------- */
+
+.hud {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: calc(var(--safe-t) + 12px) calc(var(--safe-x) + 14px) calc(var(--safe-b) + 14px);
+  pointer-events: none; /* les taps passent jusqu'au canvas */
+}
+
+.hud-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pill {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(6, 50, 74, 0.55);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(4px);
+}
+
+.energy {
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.energy-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd23f, #ff7a00);
+  transition: width 0.06s linear;
+}
+
+.hud-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-b) + 28px);
+  margin: 0;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 6px rgba(0, 30, 50, 0.5);
+}
+
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: clamp(96px, 32vw, 200px);
+  font-weight: 900;
+  text-shadow: 0 6px 24px rgba(0, 30, 50, 0.45);
+  pointer-events: none;
+}
+
+.countdown.pop {
+  animation: pop 0.8s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.25;
+  }
+}
+
+/* ---------- Accessibilité : mouvement réduit ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown.pop,
+  .duck-card,
+  .energy-fill {
+    animation: none;
+    transition: none;
+  }
+}

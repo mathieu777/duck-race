@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="description" content="Une course de canards à tapoter, jouable hors ligne.">
+  <meta name="theme-color" content="#0B6E99">
+
+  <!-- Compatibilité iOS (ajout à l'écran d'accueil) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Canards">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <title>Course de canards</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="track" aria-hidden="true"></canvas>
+
+  <!-- Écran d'accueil -->
+  <section id="screen-menu" class="screen" aria-labelledby="menu-title">
+    <div class="panel">
+      <h1 id="menu-title">Course de canards</h1>
+      <p class="lead">Choisis ton canard, puis <strong>tapote l'écran</strong> pour le faire sprinter.</p>
+
+      <fieldset class="choices">
+        <legend>Ton canard</legend>
+        <div id="duck-choices" class="duck-choices"></div>
+      </fieldset>
+
+      <button id="btn-start" class="btn primary" type="button">Lancer la course</button>
+      <p id="stats" class="stats"></p>
+    </div>
+  </section>
+
+  <!-- Interface pendant la course (ne capte pas les taps) -->
+  <section id="screen-hud" class="hud hidden" aria-live="polite">
+    <div class="hud-top">
+      <span id="hud-rank" class="pill"></span>
+      <span id="hud-time" class="pill"></span>
+    </div>
+    <div class="energy" role="img" aria-label="Énergie du canard">
+      <div id="energy-bar" class="energy-fill"></div>
+    </div>
+    <p id="hud-hint" class="hud-hint">Tapote, tapote !</p>
+    <div id="countdown" class="countdown" aria-live="assertive"></div>
+  </section>
+
+  <!-- Résultats -->
+  <section id="screen-results" class="screen hidden" aria-labelledby="result-title">
+    <div class="panel">
+      <h2 id="result-title">Podium</h2>
+      <ol id="podium" class="podium"></ol>
+      <p id="result-msg" class="lead"></p>
+      <div class="actions">
+        <button id="btn-again" class="btn primary" type="button">Rejouer</button>
+        <button id="btn-menu" class="btn" type="button">Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/game.js" defer></script>
+</body>
+</html>

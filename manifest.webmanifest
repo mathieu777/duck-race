@@ -1,0 +1,21 @@
+{
+  "name": "Course de canards",
+  "short_name": "Canards",
+  "description": "Une course de canards à tapoter, jouable hors ligne.",
+  "lang": "fr",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B6E99",
+  "theme_color": "#0B6E99",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
