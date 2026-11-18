@@ -4,10 +4,10 @@ Un jeu de course de canards jouable dans le navigateur, installable sur téléph
 
 ## Règles du jeu
 
-1. Choisis ton canard sur l'écran d'accueil.
+1. Choisis ton canard et ta difficulté (Facile, Normal ou Difficile) sur l'écran d'accueil. La difficulté règle uniquement l'allure des adversaires.
 2. Lance la course : le compte à rebours 3-2-1-GO donne le départ.
 3. **Tapote l'écran** (ou appuie sur Espace / Entrée sur ordinateur) pour booster ton canard.
-4. Chaque tap remplit la jauge d'énergie. Plus elle est haute, plus ton canard va vite (jusqu'à +50 %). Sans taps, elle se vide.
+4. Chaque tap ajoute de l'énergie à la jauge, qui s'évapore peu à peu. Plus tu tapotes vite, plus elle reste haute et plus ton canard va vite (jusqu'à +50 %, jauge pleine vers 8 taps par seconde). Sans taps, elle se vide.
 5. Le classement s'affiche à l'arrivée. Tes statistiques et ton meilleur temps de victoire sont sauvegardés sur l'appareil.
 
 ## Structure
@@ -22,8 +22,11 @@ course-canards/
 └── icons/icon.svg        Icône de l'application
 ```
 
-Les réglages de difficulté sont regroupés dans l'objet `TUNING` au début de `js/game.js` :
-vitesse de base, énergie par tap, vitesse de décroissance, bonus maximal, etc.
+Les réglages sont regroupés au début de `js/game.js` :
+
+- `TUNING` : vitesse de base, énergie par tap, évaporation de l'énergie, bonus maximal, sprints des adversaires.
+- `DIFFICULTIES` : une allure (`aiPace`) par niveau, multiplicateur de la vitesse des adversaires. Avec des taps réguliers, on gagne environ une course sur deux à ~3 taps/s en Facile, ~4,5 taps/s en Normal et ~6,5 taps/s en Difficile.
+- `HUD_SPACE` : hauteur réservée en haut et en bas de l'écran pour l'interface (jauge, chrono), afin qu'elle ne masque pas les canards.
 
 ## Lancer en local
 

@@ -2,10 +2,12 @@
  * Course de canards — logique de jeu, rendu canvas et interface.
  *
  * Principe :
- *  - Le joueur choisit un canard, puis tapote l'écran pour le booster.
- *  - Chaque tap ajoute de l'énergie ; l'énergie se vide avec le temps.
+ *  - Le joueur choisit un canard et une difficulté, puis tapote l'écran pour le booster.
+ *  - Chaque tap ajoute de l'énergie ; l'énergie s'évapore ensuite progressivement
+ *    (décroissance exponentielle) : plus on tapote vite, plus la jauge se stabilise haut.
  *  - Plus l'énergie est haute, plus le canard va vite (jusqu'à +50 %).
- *  - Les autres canards ont une vitesse de base aléatoire et des "sprints".
+ *  - Les autres canards ont une vitesse de base aléatoire et des "sprints" ;
+ *    la difficulté règle leur allure.
  */
 (() => {
   'use strict';
@@ -23,17 +25,37 @@
   ];
 
   const TUNING = {
-    speedMin: 0.060,     // vitesse de base, en fraction de piste par seconde
-    speedMax: 0.072,     // (1 = ligne d'arrivée, donc ~14 s de course)
-    wobble: 0.12,        // variation sinusoïdale de vitesse (±12 %)
-    tapEnergy: 6,        // énergie gagnée par tap
+    speedMin: 0.060,       // vitesse de base d'un canard, en fraction de piste par seconde
+    speedMax: 0.072,       // (1 = ligne d'arrivée, soit 14 à 17 s de course sans aide)
+    wobble: 0.12,          // variation sinusoïdale de vitesse (±12 %)
+    tapEnergy: 6,          // énergie gagnée à chaque tap
     maxEnergy: 100,
-    energyDecay: 14,     // énergie perdue par seconde
-    maxBoost: 0.5,       // bonus de vitesse à énergie maximale (+50 %)
-    aiSprintMin: 1.1,    // sprint IA : multiplicateur entre 1,1 et 1,3
-    aiSprintMax: 1.3,
-    countdownStep: 0.8,  // durée de chaque étape du compte à rebours (s)
+    // Évaporation de l'énergie (décroissance exponentielle, ~40 % de la jauge perdus par seconde).
+    // À rythme régulier, la jauge se stabilise à tapEnergy × taps/s ÷ energyDecay,
+    // soit 12 × taps/s : elle est pleine à partir d'environ 8 taps par seconde.
+    energyDecay: 0.5,
+    maxBoost: 0.5,         // bonus de vitesse à énergie maximale (+50 %)
+    aiSprintChance: 0.5,   // probabilité qu'une IA sprinte à chaque changement de rythme
+    aiSprintMin: 1.05,     // multiplicateur de vitesse pendant un sprint (de x1,05 à x1,25)
+    aiSprintMax: 1.25,
+    countdownStep: 0.8,    // durée de chaque étape du compte à rebours (s)
   };
+
+  // La difficulté ne change que l'allure des adversaires (multiplicateur de leur vitesse de base).
+  // Avec des taps réguliers, on gagne environ une course sur deux à ~3 taps/s (facile),
+  // ~4,5 taps/s (normal) et ~6,5 taps/s (difficile).
+  const DIFFICULTIES = {
+    easy:   { label: 'Facile',    aiPace: 1.00 },
+    normal: { label: 'Normal',    aiPace: 1.08 },
+    hard:   { label: 'Difficile', aiPace: 1.17 },
+  };
+  const DEFAULT_DIFFICULTY = 'normal';
+
+  // Zones réservées à l'interface (px CSS), en plus des marges de sécurité de l'écran :
+  // les couloirs de course sont dessinés entre les deux pour que rien ne soit masqué.
+  const HUD_SPACE = { top: 80, bottom: 60 };
+
+  const WATER_COLORS = ['#2BB6DB', '#20A3CB'];   // couleurs alternées des couloirs
 
   const COUNTDOWN = ['3', '2', '1', 'GO !'];
   const PLACE_LABELS = ['1er', '2e', '3e', '4e', '5e'];
@@ -48,12 +70,15 @@
   const formatTime = (seconds) => `${seconds.toFixed(1).replace('.', ',')} s`;
 
   function loadStore() {
-    const fallback = { races: 0, wins: 0, bestTime: null, playerIndex: 0 };
+    const fallback = { races: 0, wins: 0, bestTime: null, playerIndex: 0, difficulty: DEFAULT_DIFFICULTY };
     try {
       const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
       const merged = { ...fallback, ...data };
-      // Garde un index de canard valide même si le stockage a été altéré
+      // Garde des valeurs valides même si le stockage a été altéré
       merged.playerIndex = Math.min(Math.max(0, Number(merged.playerIndex) || 0), DUCKS.length - 1);
+      if (!Object.prototype.hasOwnProperty.call(DIFFICULTIES, merged.difficulty)) {
+        merged.difficulty = DEFAULT_DIFFICULTY;
+      }
       return merged;
     } catch (err) {
       return fallback;
@@ -82,6 +107,7 @@
     hud: $('#screen-hud'),
     results: $('#screen-results'),
     choices: $('#duck-choices'),
+    difficulty: $('#difficulty-choices'),
     start: $('#btn-start'),
     stats: $('#stats'),
     rank: $('#hud-rank'),
@@ -107,6 +133,8 @@
     particles: [],
     width: 0,
     height: 0,
+    safeTop: 0,           // marges de sécurité de l'écran (encoche, barre d'accueil), en px
+    safeBottom: 0,
     lastFrame: 0,
   };
 
@@ -115,32 +143,45 @@
      ========================================================================== */
 
   function createRacers() {
-    return DUCKS.map((duck, index) => ({
-      ...duck,
-      index,
-      isPlayer: index === store.playerIndex,
-      progress: 0,                       // 0 = départ, 1 = arrivée
-      base: rand(TUNING.speedMin, TUNING.speedMax),
-      wobbleFreq: rand(1.5, 3.5),
-      wobblePhase: rand(0, Math.PI * 2),
-      energy: 0,                         // utilisé uniquement pour le joueur
-      sprintMul: 1,                      // utilisé uniquement pour les IA
-      sprintTimer: rand(0.5, 1.5),
-      finished: false,
-      finishTime: null,
-      place: null,
-    }));
+    const level = DIFFICULTIES[store.difficulty];
+    // Le joueur a toujours l'allure moyenne : son résultat dépend de ses taps, pas de la chance.
+    const playerBase = (TUNING.speedMin + TUNING.speedMax) / 2;
+
+    return DUCKS.map((duck, index) => {
+      const isPlayer = index === store.playerIndex;
+      return {
+        ...duck,
+        index,
+        isPlayer,
+        progress: 0,                       // 0 = départ, 1 = arrivée
+        base: isPlayer ? playerBase : rand(TUNING.speedMin, TUNING.speedMax) * level.aiPace,
+        wobbleFreq: rand(1.5, 3.5),
+        wobblePhase: rand(0, Math.PI * 2),
+        energy: 0,                         // utilisé uniquement pour le joueur
+        sprintMul: 1,                      // utilisé uniquement pour les IA
+        sprintTimer: rand(0.5, 1.5),
+        finished: false,
+        finishTime: null,
+        place: null,
+      };
+    });
   }
 
   function getLayout() {
     const { width: W, height: H } = state;
-    const laneH = H / DUCKS.length;
+    const top = state.safeTop + HUD_SPACE.top;
+    const bottom = state.safeBottom + HUD_SPACE.bottom;
+    // Sur un écran très bas, les couloirs gardent au moins la moitié de la hauteur
+    const trackH = Math.max(H * 0.5, H - top - bottom);
+    const laneH = trackH / DUCKS.length;
     const size = Math.min(laneH * 0.42, W * 0.13);   // taille du canard
     const startX = W * 0.07;
     const finishX = W * 0.9;
     return {
       W,
       H,
+      top,                                           // haut du premier couloir
+      trackBottom: top + trackH,                     // bas du dernier couloir
       laneH,
       size,
       startX,
@@ -149,7 +190,7 @@
     };
   }
 
-  const laneCenterY = (L, laneIndex) => (laneIndex + 0.5) * L.laneH;
+  const laneCenterY = (L, laneIndex) => L.top + (laneIndex + 0.5) * L.laneH;
   const duckX = (L, progress) => L.startX + L.size / 2 + progress * L.travel;
 
   /* ==========================================================================
@@ -166,11 +207,17 @@
   }
 
   function drawWater(L) {
+    // Bandes au-dessus et au-dessous des couloirs (zones réservées à l'interface)
+    ctx.fillStyle = WATER_COLORS[0];
+    ctx.fillRect(0, 0, L.W, L.top + 1);
+    ctx.fillStyle = WATER_COLORS[(DUCKS.length - 1) % 2];
+    ctx.fillRect(0, L.trackBottom - 1, L.W, L.H - L.trackBottom + 1);
+
     for (let i = 0; i < DUCKS.length; i++) {
-      const top = i * L.laneH;
+      const top = L.top + i * L.laneH;
 
       // Couleur alternée pour distinguer les couloirs
-      ctx.fillStyle = i % 2 === 0 ? '#2BB6DB' : '#20A3CB';
+      ctx.fillStyle = WATER_COLORS[i % 2];
       ctx.fillRect(0, top, L.W, L.laneH);
 
       // Ondulation animée en bas de chaque couloir
@@ -190,14 +237,14 @@
 
     // Surlignage du couloir du joueur
     ctx.fillStyle = 'rgba(255, 210, 63, 0.18)';
-    ctx.fillRect(0, store.playerIndex * L.laneH, L.W, L.laneH);
+    ctx.fillRect(0, L.top + store.playerIndex * L.laneH, L.W, L.laneH);
 
     // Séparateurs pointillés entre les couloirs
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 1;
     ctx.setLineDash([10, 8]);
     for (let i = 1; i < DUCKS.length; i++) {
-      const y = i * L.laneH;
+      const y = L.top + i * L.laneH;
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(L.W, y);
@@ -207,16 +254,19 @@
   }
 
   function drawLines(L) {
+    const trackH = L.trackBottom - L.top;
+
     // Ligne de départ
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.fillRect(L.startX - 6, 0, 4, L.H);
+    ctx.fillRect(L.startX - 6, L.top, 4, trackH);
 
-    // Ligne d'arrivée en damier
+    // Ligne d'arrivée en damier (uniquement sur la hauteur des couloirs)
     const square = 10;
-    for (let y = 0, row = 0; y < L.H; y += square, row++) {
+    for (let y = L.top, row = 0; y < L.trackBottom; y += square, row++) {
+      const h = Math.min(square, L.trackBottom - y);
       for (let col = 0; col < 2; col++) {
         ctx.fillStyle = (row + col) % 2 ? '#FFFFFF' : '#0B3D55';
-        ctx.fillRect(L.finishX + col * square, y, square, square);
+        ctx.fillRect(L.finishX + col * square, y, square, h);
       }
     }
   }
@@ -380,12 +430,13 @@
       if (racer.finished) continue;
 
       if (racer.isPlayer) {
-        racer.energy = Math.max(0, racer.energy - TUNING.energyDecay * dt);
+        // Évaporation exponentielle : plus la jauge est haute, plus elle se vide vite
+        racer.energy *= Math.exp(-TUNING.energyDecay * dt);
       } else {
         racer.sprintTimer -= dt;
         if (racer.sprintTimer <= 0) {
-          // Une fois sur deux, l'IA sprinte pendant un court instant
-          racer.sprintMul = Math.random() < 0.5
+          // Parfois l'IA sprinte pendant un court instant, sinon elle reprend son allure normale
+          racer.sprintMul = Math.random() < TUNING.aiSprintChance
             ? rand(TUNING.aiSprintMin, TUNING.aiSprintMax)
             : 1;
           racer.sprintTimer = rand(0.8, 2);
@@ -550,6 +601,7 @@
     el.countdown.textContent = '';
 
     renderChoices();
+    renderDifficulty();
     renderStats();
     setScreen('menu');
   }
@@ -599,7 +651,7 @@
   }
 
   /* ==========================================================================
-     9. Écran d'accueil : choix du canard et statistiques
+     9. Écran d'accueil : choix du canard, de la difficulté et statistiques
      ========================================================================== */
 
   /** Petit canard SVG utilisé dans les cartes de choix. */
@@ -634,6 +686,31 @@
     renderChoices();
   }
 
+  /** Boutons radio natifs (clavier et lecteurs d'écran gérés par le navigateur), présentés en segments. */
+  function renderDifficulty() {
+    el.difficulty.replaceChildren(...Object.entries(DIFFICULTIES).map(([key, level]) => {
+      const label = document.createElement('label');
+
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'difficulty';
+      input.value = key;
+      input.checked = key === store.difficulty;
+      input.addEventListener('change', () => selectDifficulty(key));
+
+      const text = document.createElement('span');
+      text.textContent = level.label;
+
+      label.append(input, text);
+      return label;
+    }));
+  }
+
+  function selectDifficulty(key) {
+    store.difficulty = key;   // les adversaires sont recréés au lancement de la course
+    saveStore();
+  }
+
   function renderStats() {
     const best = store.bestTime === null ? '—' : formatTime(store.bestTime);
     el.stats.textContent = `Courses : ${store.races} · Victoires : ${store.wins} · Meilleur temps : ${best}`;
@@ -643,6 +720,18 @@
      10. Initialisation, resize et service worker
      ========================================================================== */
 
+  /** Lit les marges de sécurité de l'écran (encoche, barre d'accueil) exprimées en CSS par env(). */
+  function measureSafeAreas() {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;'
+      + 'padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);';
+    document.body.appendChild(probe);
+    const styles = getComputedStyle(probe);
+    state.safeTop = parseFloat(styles.paddingTop) || 0;
+    state.safeBottom = parseFloat(styles.paddingBottom) || 0;
+    probe.remove();
+  }
+
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     state.width = window.innerWidth;
@@ -651,6 +740,7 @@
     canvas.height = Math.round(state.height * dpr);
     // Toutes les coordonnées du rendu sont en pixels CSS
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    measureSafeAreas();
   }
 
   function registerServiceWorker() {

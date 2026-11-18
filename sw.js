@@ -4,7 +4,7 @@
  * Stratégie : réseau d'abord, cache en secours.
  * Pour publier une nouvelle version, incrémentez CACHE_VERSION.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE = `course-canards-${CACHE_VERSION}`;
 
 const ASSETS = [
