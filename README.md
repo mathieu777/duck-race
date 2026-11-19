@@ -1,4 +1,4 @@
-# Course de canards — PWA
+# Duck Race — PWA
 
 Un jeu de course de canards jouable dans le navigateur, installable sur téléphone, et utilisable hors ligne.
 
@@ -13,7 +13,7 @@ Un jeu de course de canards jouable dans le navigateur, installable sur téléph
 ## Structure
 
 ```
-course-canards/
+duck-race/
 ├── index.html            Page unique : menu, course, résultats
 ├── manifest.webmanifest  Métadonnées PWA (nom, icône, affichage)
 ├── sw.js                 Service worker (cache hors ligne)
@@ -33,7 +33,7 @@ Les réglages sont regroupés au début de `js/game.js` :
 Une PWA a besoin d'un serveur HTTP (le simple clic sur `index.html` ne suffit pas pour le service worker).
 
 ```bash
-cd course-canards
+cd duck-race
 python3 -m http.server 8000
 ```
 

@@ -1,5 +1,5 @@
 /*
- * Course de canards — logique de jeu, rendu canvas et interface.
+ * Duck Race — logique de jeu, rendu canvas et interface.
  *
  * Principe :
  *  - Le joueur choisit un canard et une difficulté, puis tapote l'écran pour le booster.
@@ -59,7 +59,9 @@
 
   const COUNTDOWN = ['3', '2', '1', 'GO !'];
   const PLACE_LABELS = ['1er', '2e', '3e', '4e', '5e'];
-  const STORAGE_KEY = 'course-canards:v1';
+  const STORAGE_KEY = 'duck-race:v1';
+  // Ancien nom du projet : on reprend les statistiques déjà enregistrées sous cette clé
+  const LEGACY_STORAGE_KEY = 'course-canards:v1';
 
   /* ==========================================================================
      2. Utilitaires et persistance
@@ -72,7 +74,9 @@
   function loadStore() {
     const fallback = { races: 0, wins: 0, bestTime: null, playerIndex: 0, difficulty: DEFAULT_DIFFICULTY };
     try {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      // La nouvelle clé d'abord ; sinon l'ancienne (première ouverture après le renommage)
+      const saved = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
+      const data = JSON.parse(saved);
       const merged = { ...fallback, ...data };
       // Garde des valeurs valides même si le stockage a été altéré
       merged.playerIndex = Math.min(Math.max(0, Number(merged.playerIndex) || 0), DUCKS.length - 1);

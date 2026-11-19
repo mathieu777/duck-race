@@ -4,8 +4,11 @@
  * Stratégie : réseau d'abord, cache en secours.
  * Pour publier une nouvelle version, incrémentez CACHE_VERSION.
  */
-const CACHE_VERSION = 'v2';
-const CACHE = `course-canards-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v3';
+const CACHE_PREFIX = 'duck-race-';
+const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
+// Ancien nom du projet : on supprime aussi les caches créés sous ce nom
+const LEGACY_CACHE_PREFIX = 'course-canards-';
 
 const ASSETS = [
   './',
@@ -25,11 +28,14 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  // Le stockage du cache est partagé par tout le domaine (tous les projets d'un même compte github.io) :
+  // on ne supprime donc que les anciens caches de ce jeu, jamais ceux d'un autre site.
+  const isOldCacheOfThisGame = (key) =>
+    key !== CACHE && (key.startsWith(CACHE_PREFIX) || key.startsWith(LEGACY_CACHE_PREFIX));
+
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(
-        keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))
-      ))
+      .then((keys) => Promise.all(keys.filter(isOldCacheOfThisGame).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });

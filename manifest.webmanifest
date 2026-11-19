@@ -1,6 +1,6 @@
 {
-  "name": "Course de canards",
-  "short_name": "Canards",
+  "name": "Duck Race",
+  "short_name": "Duck Race",
   "description": "Une course de canards à tapoter, jouable hors ligne.",
   "lang": "fr",
   "id": "./",
