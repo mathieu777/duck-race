@@ -4,63 +4,104 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="description" content="Une course de canards à tapoter, jouable hors ligne.">
-  <meta name="theme-color" content="#0B6E99">
+  <meta name="theme-color" content="#0E5C52">
 
   <!-- Compatibilité iOS (ajout à l'écran d'accueil) -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Duck Race">
-  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <title>Duck Race</title>
 
+  <!-- Les polices sont chargées avant le reste : le titre s'affiche tout de suite avec la bonne forme -->
+  <link rel="preload" href="fonts/dynapuff-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body data-screen="menu">
   <canvas id="track" aria-hidden="true"></canvas>
 
-  <!-- Écran d'accueil -->
-  <section id="screen-menu" class="screen" aria-labelledby="menu-title">
-    <div class="panel">
-      <h1 id="menu-title">Duck Race</h1>
-      <p class="lead">Choisis ton canard, puis <strong>tapote l'écran</strong> pour le faire sprinter.</p>
+  <!-- Annonces pour les lecteurs d'écran (départ, envol, arrivée) -->
+  <div id="live" class="sr-only" role="status" aria-live="polite"></div>
 
-      <fieldset class="choices">
+  <!-- Écran d'accueil -->
+  <main id="screen-menu" class="menu" aria-labelledby="menu-title">
+    <header class="brand">
+      <h1 id="menu-title" class="logo outlined" data-text="Duck Race">Duck Race</h1>
+    </header>
+    <!-- Emplacement du grand canard : il est dessiné sur le canevas, derrière cette zone vide -->
+    <div id="hero-slot" class="hero-slot" aria-hidden="true"></div>
+
+    <section class="sheet" aria-label="Préparer la course">
+      <fieldset class="field">
         <legend>Ton canard</legend>
-        <div id="duck-choices" class="duck-choices"></div>
+        <div id="duck-choices" class="duck-row"></div>
       </fieldset>
 
-      <fieldset class="choices">
+      <fieldset class="field">
         <legend>Difficulté</legend>
         <div id="difficulty-choices" class="segmented"></div>
       </fieldset>
 
-      <button id="btn-start" class="btn primary" type="button">Lancer la course</button>
-      <p id="stats" class="stats"></p>
-    </div>
-  </section>
+      <section class="field" aria-labelledby="howto-title">
+        <h2 id="howto-title" class="field-title">Pour s'envoler</h2>
+        <ol id="gesture" class="gesture"></ol>
+        <p id="howto-text" class="howto-text"></p>
+      </section>
 
-  <!-- Interface pendant la course (ne capte pas les taps) -->
-  <section id="screen-hud" class="hud hidden" aria-live="polite">
+    </section>
+
+    <!-- Hors de la feuille qui défile : le bouton reste toujours visible, quelle que soit la taille de l'écran -->
+    <div class="menu-foot">
+      <button id="btn-start" class="btn primary" type="button">Lancer la course</button>
+      <ul id="stats" class="chips" aria-label="Tes statistiques"></ul>
+    </div>
+  </main>
+
+  <!-- Interface pendant la course : elle ne capte aucun tap, tout passe au jeu -->
+  <section id="screen-hud" class="hud hidden" aria-hidden="true">
     <div class="hud-top">
-      <span id="hud-rank" class="pill"></span>
-      <span id="hud-time" class="pill"></span>
+      <p class="chip rank"><span id="hud-rank" class="rank-n">1er</span><span class="rank-of">sur 5</span></p>
+      <p id="hud-time" class="chip clock">0,0 s</p>
+      <div id="rail" class="rail"></div>
     </div>
-    <div class="energy" role="img" aria-label="Énergie du canard">
-      <div id="energy-bar" class="energy-fill"></div>
+
+    <p id="hud-hint" class="hint"></p>
+    <p id="toast" class="toast"><span id="toast-text" class="outlined" data-text=""></span></p>
+
+    <div class="hud-bottom">
+      <div class="gauge">
+        <span id="gauge-icon" class="gauge-icon"></span>
+        <div class="gauge-track"><div id="energy-bar" class="gauge-fill"></div></div>
+      </div>
+      <div id="envol" class="envol" data-state="ready">
+        <div id="combo" class="combo">
+          <i class="combo-dot"></i><i class="combo-dot"></i><span class="combo-go"></span>
+        </div>
+        <span class="envol-disc"></span>
+        <svg class="envol-ring" viewBox="0 0 76 76" aria-hidden="true" focusable="false">
+          <circle class="ring-track" cx="38" cy="38" r="32" pathLength="100"/>
+          <circle id="envol-arc" class="ring-arc" cx="38" cy="38" r="32" pathLength="100"/>
+        </svg>
+        <span id="envol-icon" class="envol-icon"></span>
+      </div>
     </div>
-    <p id="hud-hint" class="hud-hint">Tapote, tapote !</p>
-    <div id="countdown" class="countdown" aria-live="assertive"></div>
+
+    <div id="countdown" class="countdown"><span id="countdown-text" class="outlined" data-text=""></span></div>
   </section>
 
   <!-- Résultats -->
-  <section id="screen-results" class="screen hidden" aria-labelledby="result-title">
-    <div class="panel">
-      <h2 id="result-title">Podium</h2>
+  <section id="screen-results" class="results hidden" aria-labelledby="result-title">
+    <div class="sheet result-sheet">
+      <header class="result-head">
+        <span id="result-medal" class="medal" data-place="1">1</span>
+        <h2 id="result-title" class="result-title">Victoire !</h2>
+      </header>
       <ol id="podium" class="podium"></ol>
-      <p id="result-msg" class="lead"></p>
+      <ul id="result-chips" class="chips"></ul>
       <div class="actions">
         <button id="btn-again" class="btn primary" type="button">Rejouer</button>
         <button id="btn-menu" class="btn" type="button">Menu</button>
@@ -68,6 +109,6 @@
     </div>
   </section>
 
-  <script src="js/game.js" defer></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

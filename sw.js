@@ -4,19 +4,36 @@
  * Stratégie : réseau d'abord, cache en secours.
  * Pour publier une nouvelle version, incrémentez CACHE_VERSION.
  */
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_PREFIX = 'duck-race-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Ancien nom du projet : on supprime aussi les caches créés sous ce nom
 const LEGACY_CACHE_PREFIX = 'course-canards-';
 
+// Tout ce qu'il faut pour jouer hors ligne. Un fichier oublié ici = un jeu cassé sans réseau :
+// chaque nouveau module JavaScript, police ou image doit être ajouté à cette liste.
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
-  './js/game.js',
+  './js/config.js',
+  './js/store.js',
+  './js/input.js',
+  './js/race.js',
+  './js/sprites.js',
+  './js/fx.js',
+  './js/scene.js',
+  './js/icons.js',
+  './js/ui.js',
+  './js/main.js',
+  './fonts/dynapuff-latin-wght-normal.woff2',
+  './fonts/figtree-latin-wght-normal.woff2',
   './manifest.webmanifest',
   './icons/icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
