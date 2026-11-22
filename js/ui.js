@@ -9,8 +9,8 @@ import { DUCKS, DIFFICULTIES, FLIGHT } from './config.js';
 import { paintPortrait } from './sprites.js';
 import { icon } from './icons.js';
 
-/** « 12,4 s » : la virgule décimale, comme en français. */
-export const formatTime = (seconds) => `${seconds.toFixed(1).replace('.', ',')} s`;
+/** « 12.4 s » : une décimale, avec le point décimal des textes anglais. */
+export const formatTime = (seconds) => `${seconds.toFixed(1)} s`;
 
 /** Relance une animation CSS en retirant puis remettant sa classe. */
 function restartAnimation(node, className) {
@@ -118,8 +118,8 @@ export function createUI(handlers) {
     el.gesture.innerHTML = `
       <li>${icon('tap', 30)}<span>Tap</span></li>
       <li>${icon('tap', 30)}<span>Tap</span></li>
-      <li class="is-go">${icon('swipe', 30)}<span>Glisse vers la droite</span></li>`;
-    el.howtoText.textContent = `Ton canard décolle et file plus vite un instant. Il faut attendre ${Math.round(FLIGHT.recharge)} secondes avant le prochain envol.`;
+      <li class="is-go">${icon('swipe', 30)}<span>Swipe right</span></li>`;
+    el.howtoText.textContent = `Your duck lifts off and speeds up for a moment. You can take off again after ${Math.round(FLIGHT.recharge)} seconds.`;
 
     el.gaugeIcon.innerHTML = icon('bolt', 22);
     el.envolIcon.innerHTML = icon('wing', 32);
@@ -157,8 +157,8 @@ export function createUI(handlers) {
   }
 
   function renderStats(store) {
-    const items = [['Courses', String(store.races)], ['Victoires', String(store.wins)]];
-    if (store.bestTime != null) items.push(['Record', formatTime(store.bestTime)]);
+    const items = [['Races', String(store.races)], ['Wins', String(store.wins)]];
+    if (store.bestTime != null) items.push(['Best', formatTime(store.bestTime)]);
     el.stats.innerHTML = items.map(([label, value]) => `<li><span>${label}</span><b>${value}</b></li>`).join('');
   }
 
@@ -189,8 +189,8 @@ export function createUI(handlers) {
 
   /**
    * @param {object} h
-   * @param {string} h.rankLabel  « 2e »
-   * @param {string} h.timeText   « 12,4 s »
+   * @param {string} h.rankLabel  « 2nd »
+   * @param {string} h.timeText   « 12.4 s »
    * @param {number} h.energy     de 0 à 1
    * @param {number[]} h.progress  progression de chaque canard, de 0 à 1
    * @param {{state: string, fraction: number}} h.envol  état de la bague : ready, charging ou flying
@@ -225,7 +225,7 @@ export function createUI(handlers) {
     el.hint.classList.add('show');
   }
 
-  /** Grande annonce au centre (« Envol ! »). */
+  /** Grande annonce au centre (« Take-off! »). */
   function toast(text) {
     el.toastText.textContent = text;
     el.toastText.dataset.text = text;
@@ -284,7 +284,7 @@ export function createUI(handlers) {
       portrait.setAttribute('aria-hidden', 'true');
       paintPortrait(portrait, racer.index, 40);
       const name = document.createElement('span');
-      name.textContent = racer.isPlayer ? `${racer.name} (toi)` : racer.name;
+      name.textContent = racer.isPlayer ? `${racer.name} (you)` : racer.name;
       const time = document.createElement('span');
       time.className = 'time';
       time.textContent = formatTime(racer.finishTime);
@@ -293,11 +293,11 @@ export function createUI(handlers) {
     });
 
     const chips = [
-      ['Temps', formatTime(r.ranking.find((racer) => racer.isPlayer).finishTime)],
-      [r.flights > 1 ? 'Envols' : 'Envol', String(r.flights)],
+      ['Time', formatTime(r.ranking.find((racer) => racer.isPlayer).finishTime)],
+      [r.flights === 1 ? 'Take-off' : 'Take-offs', String(r.flights)],
     ];
     el.resultChips.innerHTML = chips.map(([label, value]) => `<li><span>${label}</span><b>${value}</b></li>`).join('')
-      + (r.record ? '<li class="is-highlight"><b>Nouveau record</b></li>' : '');
+      + (r.record ? '<li class="is-highlight"><b>New record</b></li>' : '');
 
     showScreen('results');
     el.again.focus({ preventScroll: true });

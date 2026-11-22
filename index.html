@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="description" content="Une course de canards à tapoter, jouable hors ligne.">
+  <meta name="description" content="A duck race you win by tapping. Works offline.">
   <meta name="theme-color" content="#0E5C52">
 
   <!-- Compatibilité iOS (ajout à l'écran d'accueil) -->
@@ -35,19 +35,19 @@
     <!-- Emplacement du grand canard : il est dessiné sur le canevas, derrière cette zone vide -->
     <div id="hero-slot" class="hero-slot" aria-hidden="true"></div>
 
-    <section class="sheet" aria-label="Préparer la course">
+    <section class="sheet" aria-label="Race setup">
       <fieldset class="field">
-        <legend>Ton canard</legend>
+        <legend>Your duck</legend>
         <div id="duck-choices" class="duck-row"></div>
       </fieldset>
 
       <fieldset class="field">
-        <legend>Difficulté</legend>
+        <legend>Difficulty</legend>
         <div id="difficulty-choices" class="segmented"></div>
       </fieldset>
 
       <section class="field" aria-labelledby="howto-title">
-        <h2 id="howto-title" class="field-title">Pour s'envoler</h2>
+        <h2 id="howto-title" class="field-title">How to take off</h2>
         <ol id="gesture" class="gesture"></ol>
         <p id="howto-text" class="howto-text"></p>
       </section>
@@ -56,16 +56,16 @@
 
     <!-- Hors de la feuille qui défile : le bouton reste toujours visible, quelle que soit la taille de l'écran -->
     <div class="menu-foot">
-      <button id="btn-start" class="btn primary" type="button">Lancer la course</button>
-      <ul id="stats" class="chips" aria-label="Tes statistiques"></ul>
+      <button id="btn-start" class="btn primary" type="button">Start race</button>
+      <ul id="stats" class="chips" aria-label="Your stats"></ul>
     </div>
   </main>
 
   <!-- Interface pendant la course : elle ne capte aucun tap, tout passe au jeu -->
   <section id="screen-hud" class="hud hidden" aria-hidden="true">
     <div class="hud-top">
-      <p class="chip rank"><span id="hud-rank" class="rank-n">1er</span><span class="rank-of">sur 5</span></p>
-      <p id="hud-time" class="chip clock">0,0 s</p>
+      <p class="chip rank"><span id="hud-rank" class="rank-n">1st</span><span class="rank-of">of 5</span></p>
+      <p id="hud-time" class="chip clock">0.0 s</p>
       <div id="rail" class="rail"></div>
     </div>
 
@@ -98,12 +98,12 @@
     <div class="sheet result-sheet">
       <header class="result-head">
         <span id="result-medal" class="medal" data-place="1">1</span>
-        <h2 id="result-title" class="result-title">Victoire !</h2>
+        <h2 id="result-title" class="result-title">Victory!</h2>
       </header>
       <ol id="podium" class="podium"></ol>
       <ul id="result-chips" class="chips"></ul>
       <div class="actions">
-        <button id="btn-again" class="btn primary" type="button">Rejouer</button>
+        <button id="btn-again" class="btn primary" type="button">Replay</button>
         <button id="btn-menu" class="btn" type="button">Menu</button>
       </div>
     </div>

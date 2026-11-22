@@ -4,7 +4,7 @@
  * Stratégie : réseau d'abord, cache en secours.
  * Pour publier une nouvelle version, incrémentez CACHE_VERSION.
  */
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_PREFIX = 'duck-race-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Ancien nom du projet : on supprime aussi les caches créés sous ce nom

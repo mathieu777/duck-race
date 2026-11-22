@@ -4,7 +4,7 @@
 
 ## English
 
-A duck-racing game for phones: playable in the browser, installable on the home screen and usable offline. The in-game text is in French (difficulty levels: *Facile* = Easy, *Normal*, *Difficile* = Hard; *Envol* = take-off).
+A duck-racing game for phones: playable in the browser, installable on the home screen and usable offline. The in-game text is in English.
 
 ### How to play
 
@@ -78,19 +78,20 @@ The folder is static, so you can host it as is:
 - **Fonts**: DynaPuff (titles) and Figtree (text) are bundled in `fonts/`, so no request goes to an external server.
 - **Comfort**: the game respects the "reduce motion" setting (no confetti, speed lines or water droplets), works in landscape and around notches (safe areas), and everything in the menu can be used with a keyboard.
 - **Sound and vibration**: vibration is supported on Android (`navigator.vibrate`) for taps, take-off and finish, but not on iOS. Sound is not implemented yet and could be added with the Web Audio API.
+- **Texts and language**: the game is in English. Every text a player sees is written as plain text in the code: the menu and results screens in `index.html` and `js/ui.js`; the messages during the race (hints, “Take-off!”, results titles, screen-reader announcements) in `js/main.js`; the duck names, difficulty names, countdown and rank labels (1st, 2nd…) in `js/config.js`; the banners and name tags drawn on the track (“Start”, “Finish”, “You”) in `js/scene.js`. If you translate the game, also change `lang` in `index.html` and `manifest.webmanifest`, and the page descriptions.
 
 ---
 
 ## <a name="francais"></a>Français
 
-Un jeu de course de canards pour téléphone : jouable dans le navigateur, installable sur l'écran d'accueil et utilisable hors ligne. Les textes du jeu sont en français (niveaux : *Facile*, *Normal*, *Difficile*).
+Un jeu de course de canards pour téléphone : jouable dans le navigateur, installable sur l'écran d'accueil et utilisable hors ligne. Les textes du jeu sont en anglais (niveaux : *Easy* = facile, *Normal*, *Hard* = difficile ; *take-off* = envol).
 
 ### Règles du jeu
 
-1. Choisis ton canard et ta difficulté (Facile, Normal ou Difficile) sur l'écran d'accueil. La difficulté règle uniquement l'allure des adversaires.
+1. Choisis ton canard et ta difficulté (*Easy*, *Normal* ou *Hard*) sur l'écran d'accueil. La difficulté règle uniquement l'allure des adversaires.
 2. Lance la course : le compte à rebours 3-2-1-GO donne le départ.
 3. **Tapote l'écran** (ou appuie sur Espace / Entrée sur ordinateur) pour booster ton canard. Chaque tap ajoute de l'énergie à la jauge, qui s'évapore peu à peu. Plus tu tapotes vite, plus ton canard va vite (jusqu'à +50 %, jauge pleine vers 8 taps par seconde).
-4. **Envol : tape deux fois, puis glisse vers la droite** (sur ordinateur : Espace, Espace, puis la flèche droite). Ton canard décolle pendant environ une seconde, laisse son ombre sur l'eau et accélère (jusqu'à +25 % au sommet du vol). Le bouton d'envol, en bas à droite, se recharge ensuite pendant 4 secondes et se rallume quand tu peux t'envoler de nouveau.
+4. **Envol (*take-off*) : tape deux fois, puis glisse vers la droite** (sur ordinateur : Espace, Espace, puis la flèche droite). Ton canard décolle pendant environ une seconde, laisse son ombre sur l'eau et accélère (jusqu'à +25 % au sommet du vol). Le bouton d'envol, en bas à droite, se recharge ensuite pendant 4 secondes et se rallume quand tu peux t'envoler de nouveau.
    - La glissade doit mesurer au moins 44 px, être rapide (moins d'une demi-seconde) et plutôt horizontale. Les deux taps comptent s'ils ont eu lieu dans la seconde qui précède le début de la glissade. Tu peux tapoter sans arrêt : la glissade peut venir à n'importe quel moment.
    - Commence la glissade loin du bord de l'écran : sur certains téléphones, une glissade depuis le bord est le geste « retour » du système.
 5. Le classement s'affiche à l'arrivée. Tes statistiques et ton meilleur temps de victoire sont sauvegardés sur l'appareil.
@@ -157,3 +158,4 @@ Le dossier est statique, il suffit de l'héberger tel quel :
 - **Polices** : DynaPuff (titres) et Figtree (textes) sont embarquées dans `fonts/`, aucune requête ne part vers un serveur extérieur.
 - **Confort** : le jeu respecte le réglage « réduire les animations » (pas de confettis, de traits de vitesse ni de gouttes d'eau), fonctionne en paysage et autour des encoches (zones sûres), et tout le menu s'utilise au clavier.
 - **Son et vibrations** : les vibrations sont prises en charge sur Android (`navigator.vibrate`) pour les taps, l'envol et l'arrivée, pas sur iOS. Le son n'est pas encore implémenté et pourrait être ajouté avec l'API Web Audio.
+- **Textes et langue** : le jeu est en anglais. Tous les textes que voit le joueur sont écrits en clair dans le code : écrans du menu et des résultats dans `index.html` et `js/ui.js` ; messages pendant la course (aides, « Take-off! », titres des résultats, annonces pour les lecteurs d'écran) dans `js/main.js` ; noms des canards, des niveaux, compte à rebours et rangs (1st, 2nd…) dans `js/config.js` ; bannières et étiquettes dessinées sur la piste (« Start », « Finish », « You ») dans `js/scene.js`. Si tu traduis le jeu, pense aussi à l'attribut `lang` (dans `index.html` et `manifest.webmanifest`) et aux descriptions de la page.

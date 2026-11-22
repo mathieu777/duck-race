@@ -1,8 +1,8 @@
 {
   "name": "Duck Race",
   "short_name": "Duck Race",
-  "description": "Une course de canards à tapoter, jouable hors ligne. Tape deux fois puis glisse vers la droite : ton canard s'envole.",
-  "lang": "fr",
+  "description": "A duck race you win by tapping. Works offline. Tap twice, then swipe right: your duck takes off.",
+  "lang": "en",
   "id": "./",
   "start_url": "./index.html",
   "scope": "./",

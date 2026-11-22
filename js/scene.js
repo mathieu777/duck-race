@@ -247,9 +247,10 @@ function makeBank(layout, kind) {
   return { canvas, w, h: bankH + extra, bankH };
 }
 
-/** Tuile « bouée rouge, bouée blanche » le long d'une corde. */
+/** Tuile « une bouée blanche » le long d'une corde (elle se répète tous les ROPE_PERIOD pixels). */
+const ROPE_PERIOD = 38;
 function makeRopeTile(dpr) {
-  const w = 76;
+  const w = ROPE_PERIOD;
   const h = 24;
   const { canvas, ctx } = makeCanvas(w, h, dpr);
   ctx.strokeStyle = 'rgba(246,251,251,0.75)';
@@ -258,7 +259,7 @@ function makeRopeTile(dpr) {
   ctx.moveTo(0, 12);
   ctx.lineTo(w, 12);
   ctx.stroke();
-  [[19, COLORS.buoy, '#B7281B'], [57, COLORS.foam, '#A6C4CF']].forEach(([cx, color, edge]) => {
+  [[ROPE_PERIOD / 2, COLORS.foam, '#A6C4CF']].forEach(([cx, color, edge]) => {
     ctx.fillStyle = 'rgba(3,52,82,0.25)';
     ctx.beginPath();
     ctx.ellipse(cx, 16, 9.5, 4, 0, 0, TAU);
@@ -482,7 +483,7 @@ export function createScene() {
   }
 
   function drawRopes(ctx, v) {
-    const period = 76;
+    const period = ROPE_PERIOD;
     // Les couloirs s'arrêtent un peu après la ligne d'arrivée : derrière, c'est de l'eau libre
     const width = Math.min(L.W, L.finishLine - camera.x + 12);
     if (width <= 0) return;
@@ -491,6 +492,20 @@ export function createScene() {
       const bob = Math.sin(v.time * 2.1 + i * 1.3) * 1.2;
       fillPattern(ctx, art.rope, -(camera.x % period), y - 12 + bob, 1, 1, 0, y - 12 + bob, width, 24);
     }
+  }
+
+  /** Le couloir du joueur est éclairé : une bande claire, plus lumineuse au centre, qu'on repère même du coin de l'œil. */
+  function drawPlayerLane(ctx, v) {
+    const player = v.race.racers.find((racer) => racer.isPlayer);
+    const width = Math.min(L.W, L.finishLine - camera.x + 12);     // comme les cordes : elle s'arrête après l'arrivée
+    if (!player || width <= 0) return;
+    const y = L.trackTop + player.index * L.laneH;
+    const glow = ctx.createLinearGradient(0, y, 0, y + L.laneH);
+    glow.addColorStop(0, 'rgba(255,255,255,0)');
+    glow.addColorStop(0.5, 'rgba(255,255,255,0.32)');
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, y, width, L.laneH);
   }
 
   function drawPole(ctx, x, atTop, color, label, v) {
@@ -532,14 +547,14 @@ export function createScene() {
     if (sx > -40 && sx < L.W + 40) {
       ctx.fillStyle = 'rgba(246,251,251,0.9)';
       for (let y = L.trackTop; y < L.trackBottom; y += 18) ctx.fillRect(sx - 2, y, 4, 10);
-      drawPole(ctx, sx, true, '#0E9AA7', 'Départ', v);
+      drawPole(ctx, sx, true, '#0E9AA7', 'Start', v);
       drawPole(ctx, sx, false, '#0E9AA7', null, v);
     }
     // Ligne d'arrivée : bande à damier
     const fx = L.finishLine - camera.x;
     if (fx > -60 && fx < L.W + 60) {
       fillPattern(ctx, art.checker, fx - 12, L.trackTop, 1, 1, fx - 12, L.trackTop, 24, L.trackH);
-      drawPole(ctx, fx, true, COLORS.buoy, 'Arrivée', v);
+      drawPole(ctx, fx, true, COLORS.buoy, 'Finish', v);
       drawPole(ctx, fx, false, COLORS.buoy, null, v);
     }
   }
@@ -608,16 +623,20 @@ export function createScene() {
       }
     }
 
-    // Anneau d'eau : la moitié arrière passe derrière le canard, la moitié avant devant
-    const ringRx = size * 0.43;
-    const ringRy = size * 0.085;
-    if (water > 0.02) {
-      ctx.globalAlpha = water;
-      ctx.fillStyle = 'rgba(246,251,251,0.14)';
+    // Anneau d'eau : la moitié arrière passe derrière le canard, la moitié avant devant.
+    // Celui du joueur est jaune et plus épais : on le retrouve d'un coup d'œil dans le peloton.
+    const isYou = racer.isPlayer && v.showMarker;
+    const ringRx = size * (isYou ? 0.47 : 0.43);
+    const ringRy = size * (isYou ? 0.095 : 0.085);
+    const ringWidth = Math.max(isYou ? 2.4 : 1.5, size * (isYou ? 0.05 : 0.03));
+    const ringAlpha = isYou ? Math.max(water, 0.6) : water;   // en vol, l'anneau du joueur marque l'endroit où il se posera
+    if (ringAlpha > 0.02) {
+      ctx.globalAlpha = ringAlpha;
+      ctx.fillStyle = isYou ? 'rgba(255,203,31,0.26)' : 'rgba(246,251,251,0.14)';
       ellipse(ctx, x, waterY - 1, ringRx, ringRy);
       ctx.fill();
-      ctx.strokeStyle = 'rgba(246,251,251,0.55)';
-      ctx.lineWidth = Math.max(1.5, size * 0.03);
+      ctx.strokeStyle = isYou ? 'rgba(255,214,64,0.95)' : 'rgba(246,251,251,0.55)';
+      ctx.lineWidth = ringWidth;
       ctx.beginPath();
       ctx.ellipse(x, waterY - 1, ringRx, ringRy, 0, Math.PI, TAU);
       ctx.stroke();
@@ -626,17 +645,17 @@ export function createScene() {
 
     drawDuck(ctx, sprites[racer.index], x, baseY - lift, { angle: tilt, wing, air: airborne });
 
-    if (water > 0.02) {
-      ctx.globalAlpha = water;
-      ctx.strokeStyle = 'rgba(246,251,251,0.7)';
-      ctx.lineWidth = Math.max(1.5, size * 0.03);
+    if (ringAlpha > 0.02) {
+      ctx.globalAlpha = ringAlpha;
+      ctx.strokeStyle = isYou ? 'rgb(255,214,64)' : 'rgba(246,251,251,0.7)';
+      ctx.lineWidth = ringWidth;
       ctx.beginPath();
       ctx.ellipse(x, waterY - 1, ringRx, ringRy, 0, 0, Math.PI);
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
 
-    return { x, topY: baseY - lift - size * 0.62, airborne, height01 };
+    return { x, topY: baseY - lift - size * 0.62, ringBottom: waterY - 1 + ringRy + ringWidth / 2, airborne, height01 };
   }
 
   function drawTag(ctx, text, x, y, fill, alpha) {
@@ -655,20 +674,64 @@ export function createScene() {
     ctx.globalAlpha = 1;
   }
 
-  function drawMarker(ctx, x, y, t) {
-    // Petit chevron au-dessus du canard du joueur : on le retrouve toujours dans le peloton
-    const bounce = Math.sin(t * 5) * 2;
+  /** Contour d'une pastille : rectangle arrondi + pointe de `tailH` de haut, en bas (ou en haut si `up`). */
+  function tagPath(ctx, x, top, w, h, tail, tailH, up) {
+    const r = h / 2;
+    const bottom = top + h;
     ctx.beginPath();
-    ctx.moveTo(x - 8, y - 7 + bounce);
-    ctx.lineTo(x + 8, y - 7 + bounce);
-    ctx.lineTo(x, y + 4 + bounce);
+    ctx.moveTo(x - w / 2 + r, top);
+    if (up) {
+      ctx.lineTo(x - tail, top);
+      ctx.lineTo(x, top - tailH);
+      ctx.lineTo(x + tail, top);
+    }
+    ctx.lineTo(x + w / 2 - r, top);
+    ctx.arc(x + w / 2 - r, top + r, r, -Math.PI / 2, Math.PI / 2);
+    if (!up) {
+      ctx.lineTo(x + tail, bottom);
+      ctx.lineTo(x, bottom + tailH);
+      ctx.lineTo(x - tail, bottom);
+    }
+    ctx.lineTo(x - w / 2 + r, bottom);
+    ctx.arc(x - w / 2 + r, top + r, r, Math.PI / 2, Math.PI * 1.5);
     ctx.closePath();
-    ctx.fillStyle = COLORS.sun;
-    ctx.strokeStyle = COLORS.ink;
-    ctx.lineWidth = 2.4;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-    ctx.fill();
+  }
+
+  /**
+   * Pastille « You » qui suit le canard du joueur pendant toute la course, même en vol.
+   * Elle est au-dessus du canard, pointe vers le bas. Quand le canard du couloir du haut s'envole, il n'y a plus
+   * de place sous la barre du haut : la pastille passe alors en fondu sous son anneau d'eau, pointe vers le haut.
+   */
+  function drawYouTag(ctx, spot, t) {
+    const k = L.compact ? 0.82 : 1;          // en paysage les couloirs sont minces : pastille plus petite
+    const bounce = Math.sin(t * 5) * 2 * k;
+    ctx.font = `700 ${15 * k}px ${FONT_DISPLAY}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const w = ctx.measureText('You').width + 24 * k;
+    const h = 26 * k;
+    const tail = 7 * k;                       // demi-largeur de la pointe
+    const tailH = 8 * k;                      // hauteur de la pointe
+
+    const minTop = L.safe.top + (L.compact ? 34 : 52);          // la pastille ne passe pas sous la barre du haut (rang, chrono)
+    const topAbove = spot.topY - 4 - tailH - h + bounce;
+    const above = clamp((topAbove - minTop) / (18 * k) + 1, 0, 1);
+
+    const pill = (top, up, alpha) => {
+      ctx.globalAlpha = alpha;
+      tagPath(ctx, spot.x, top, w, h, tail, tailH, up);
+      ctx.fillStyle = COLORS.sun;
+      ctx.strokeStyle = COLORS.ink;
+      ctx.lineWidth = 2.6 * k;
+      ctx.lineJoin = 'round';
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = COLORS.ink;
+      ctx.fillText('You', spot.x, top + h / 2 + k);
+      ctx.globalAlpha = 1;
+    };
+    if (above > 0.02) pill(topAbove, false, above);
+    if (above < 0.98) pill(spot.ringBottom + 3 * k + tailH + bounce, true, 1 - above);
   }
 
   const MEDAL = ['#FFC83D', '#C9D3DC', '#D9915B', '#F6FBFB', '#F6FBFB'];
@@ -707,19 +770,13 @@ export function createScene() {
     for (const racer of order) {
       const spot = spots.get(racer);
       if (!spot) continue;
-      // Quand un canard s'envole haut, son étiquette et sa flèche s'effacent (elles ne montent pas sous la barre du haut)
-      const grounded = 1 - spot.height01;
       if (racer.finished) {
         drawBadge(ctx, spot.x, spot.topY - 8, racer.place, race.time - racer.finishTime);
-      } else if (v.showMarker && racer.isPlayer && grounded > 0.02) {
-        ctx.globalAlpha = grounded;
-        drawMarker(ctx, spot.x, spot.topY - 10, v.time);
-        ctx.globalAlpha = 1;
-      }
-      if (v.tagsAlpha > 0.01 && !racer.finished) {
-        const label = racer.isPlayer && v.showMarker ? 'Toi' : racer.name;
-        const yTag = spot.topY - (racer.isPlayer && v.showMarker ? 34 : 14);
-        drawTag(ctx, label, spot.x, yTag, racer.isPlayer && v.showMarker ? COLORS.sun : 'rgba(246,251,251,0.92)', v.tagsAlpha * grounded);
+      } else if (v.showMarker && racer.isPlayer) {
+        drawYouTag(ctx, spot, v.time);
+      } else if (v.tagsAlpha > 0.01) {
+        // Le nom d'un adversaire s'efface quand son canard s'envole haut (il ne monterait pas sous la barre du haut)
+        drawTag(ctx, racer.name, spot.x, spot.topY - 14, 'rgba(246,251,251,0.92)', v.tagsAlpha * (1 - spot.height01));
       }
     }
   }
@@ -802,6 +859,7 @@ export function createScene() {
     if (v.mode === 'menu') {
       drawHero(ctx, v);
     } else {
+      drawPlayerLane(ctx, v);
       drawRopes(ctx, v);
       drawStartAndFinish(ctx, v);
       drawRacers(ctx, v);

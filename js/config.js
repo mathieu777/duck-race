@@ -10,11 +10,11 @@
  * il distingue les canards même sans les couleurs (daltonisme, petits écrans).
  */
 export const DUCKS = [
-  { name: 'Cocotte',  color: '#FFCB1F', light: '#FFE680', dark: '#EE9B00', accessory: 'bow' },
-  { name: 'Plouf',    color: '#6FB8FF', light: '#B9DCFF', dark: '#3A86DB', accessory: 'goggles' },
-  { name: 'Bouboule', color: '#FF8FB5', light: '#FFC4D8', dark: '#E0568A', accessory: 'shades' },
+  { name: 'Goldie',   color: '#FFCB1F', light: '#FFE680', dark: '#EE9B00', accessory: 'bow' },
+  { name: 'Splash',   color: '#6FB8FF', light: '#B9DCFF', dark: '#3A86DB', accessory: 'goggles' },
+  { name: 'Peaches',  color: '#FF8FB5', light: '#FFC4D8', dark: '#E0568A', accessory: 'shades' },
   { name: 'Gaston',   color: '#9BDD5B', light: '#CBF39C', dark: '#62B032', accessory: 'beret' },
-  { name: 'Plume',    color: '#B79BFF', light: '#DDCEFF', dark: '#8661EA', accessory: 'feather' },
+  { name: 'Feather',  color: '#B79BFF', light: '#DDCEFF', dark: '#8661EA', accessory: 'feather' },
 ];
 
 /** Couleurs partagées entre le canvas et les icônes (le CSS a ses propres variables, aux mêmes valeurs). */
@@ -72,9 +72,9 @@ export const HOP = {
  *  - avec trois envols bien placés par course, environ trois courses sur quatre.
  */
 export const DIFFICULTIES = {
-  easy:   { label: 'Facile',    aiPace: 1.04 },
+  easy:   { label: 'Easy',      aiPace: 1.04 },
   normal: { label: 'Normal',    aiPace: 1.11 },
-  hard:   { label: 'Difficile', aiPace: 1.20 },
+  hard:   { label: 'Hard',      aiPace: 1.20 },
 };
 export const DEFAULT_DIFFICULTY = 'normal';
 
@@ -97,8 +97,8 @@ export const WORLD = {
   tagSeconds: 3,         // durée d'affichage des étiquettes de noms après le départ (s)
 };
 
-export const COUNTDOWN = ['3', '2', '1', 'Go !'];
-export const PLACE_LABELS = ['1er', '2e', '3e', '4e', '5e'];
+export const COUNTDOWN = ['3', '2', '1', 'Go!'];
+export const PLACE_LABELS = ['1st', '2nd', '3rd', '4th', '5th'];
 export const RESULT_DELAY = 0.9;   // pause entre la dernière arrivée et l'écran des résultats (s)
 
 export const STORAGE_KEY = 'duck-race:v1';

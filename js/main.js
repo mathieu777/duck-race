@@ -39,14 +39,14 @@ let race = newRace();              // au menu, une course « à l'arrêt » : le
 let time = 0;                      // horloge d'animation (s), pour tout ce qui bouge sans raison de jeu
 let countdownTime = 0;
 let countdownStep = -1;
-let goTimer = 0;                   // durée restante d'affichage du « Go ! »
+let goTimer = 0;                   // durée restante d'affichage du « Go! »
 let resultWait = 0;                // pause entre la dernière arrivée et l'écran des résultats
 let heroBounce = 0;                // petit rebond du grand canard quand on en choisit un autre
 let heroRect = null;
 let speedGlow = 0;                 // intensité (lissée) des traits de vitesse pendant l'envol
 let hintOverride = null;           // message temporaire après un geste raté : { html, until }
 
-const GESTURE_HINT = `Tap, tap, glisse ${icon('swipe', 18)}`;
+const GESTURE_HINT = `Tap, tap, swipe ${icon('swipe', 18)}`;
 
 function newRace() {
   return createRace({ playerIndex: store.playerIndex, difficulty: store.difficulty });
@@ -90,7 +90,7 @@ const input = createInput({
     if (!combo) {
       // Une glissade sans les deux taps avant : on rappelle le geste aux débutants
       ui.nudge();
-      if (store.takeoffs < 6) hintOverride = { html: 'Deux taps, puis glisse', until: race.time + 1.8 };
+      if (store.takeoffs < 6) hintOverride = { html: 'Two taps, then swipe', until: race.time + 1.8 };
       return;
     }
     if (!takeOff(race)) ui.nudge();       // l'envol se recharge encore
@@ -135,13 +135,13 @@ function updateCountdown(dt) {
   if (stepIndex === countdownStep) return;
   countdownStep = stepIndex;
   ui.setCountdown(COUNTDOWN[stepIndex]);
-  if (stepIndex === 0) ui.announce('Prêt ?');
+  if (stepIndex === 0) ui.announce('Ready?');
   if (stepIndex === COUNTDOWN.length - 1) {
-    // « Go ! » : la course démarre à cet instant
+    // « Go! » : la course démarre à cet instant
     mode = 'race';
     goTimer = TUNING.countdownStep;
     ui.showScreen('race');
-    ui.announce('Partez !');
+    ui.announce('Go!');
     vibrate(20);
   }
 }
@@ -163,12 +163,12 @@ function endRace() {
   }
   saveStore(store);
 
-  const title = player.place === 1 ? 'Victoire !' : player.place <= 3 ? 'Podium !' : 'Course terminée';
+  const title = player.place === 1 ? 'Victory!' : player.place <= 3 ? 'Podium!' : 'Race finished';
   ui.hint(null);
   ui.setCountdown(null);
   ui.renderStats(store);
   ui.showResults({ title, place: player.place, ranking, flights: player.flights, record });
-  ui.announce(`${title} Tu termines ${PLACE_LABELS[player.place - 1]}.`);
+  ui.announce(`${title}${/[.!?]$/.test(title) ? '' : '.'} You finished ${PLACE_LABELS[player.place - 1]}.`);
 }
 
 /** Ce que l'interface doit afficher à cet instant. */
@@ -180,7 +180,7 @@ function hudState() {
   else if (player.recharge > 0) envol = { state: 'charging', fraction: 1 - player.recharge / FLIGHT.recharge };
   else envol = { state: 'ready', fraction: 1 };
   return {
-    rankLabel: race.time < 0.3 && !player.finished ? '–' : (PLACE_LABELS[rank - 1] ?? `${rank}e`),
+    rankLabel: race.time < 0.3 && !player.finished ? '–' : (PLACE_LABELS[rank - 1] ?? `${rank}th`),
     timeText: formatTime(player.finished ? player.finishTime : race.time),
     energy: player.energy / TUNING.maxEnergy,
     progress: race.racers.map((racer) => racer.progress),
@@ -194,7 +194,7 @@ function currentHint() {
   const player = playerOf(race);
   if (player.finished) return null;
   if (hintOverride && race.time < hintOverride.until) return hintOverride.html;
-  if (race.time < 2.5) return 'Tapote le plus vite !';
+  if (race.time < 2.5) return 'Tap as fast as you can!';
   const ready = player.flightT < 0 && player.recharge <= 0;
   if (store.takeoffs < 3 && ready) return GESTURE_HINT;
   return null;
@@ -209,8 +209,8 @@ function handleEvents() {
     if (event.type === 'takeoff') {
       fx.splash(spot.x, spot.y, size, 0.9);
       store.takeoffs += 1;
-      ui.toast('Envol !');
-      ui.announce('Envol !');
+      ui.toast('Take-off!');
+      ui.announce('Take-off!');
       vibrate([14, 40, 14]);
     } else if (event.type === 'land' && racer.isPlayer) {
       fx.splash(spot.x, spot.y, size, 1);
@@ -218,7 +218,7 @@ function handleEvents() {
       fx.ring(spot.x, spot.y, { radius: size * 0.55, life: 0.6, alpha: 0.5 });
     } else if (event.type === 'finish' && racer.isPlayer) {
       vibrate(racer.place === 1 ? [30, 50, 30, 50, 90] : 40);
-      ui.announce(`Arrivée : ${PLACE_LABELS[racer.place - 1]}`);
+      ui.announce(`Finished: ${PLACE_LABELS[racer.place - 1]}`);
       if (racer.place === 1) fx.confetti(scene.layout.W, scene.layout.H);
     }
   }
